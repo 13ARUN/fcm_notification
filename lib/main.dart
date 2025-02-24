@@ -2,16 +2,75 @@ import 'package:fcm_notification/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 @pragma('vm:entry-point')
 Future<void> _backgroundMessageHandler(RemoteMessage message) async {
-  debugPrint("Handling a background message: ${message.notification!.title}");
+  await Firebase.initializeApp(); // Ensure Firebase is initialized
+  debugPrint("Handling background message: ${message.notification?.title}");
+
+  if (message.notification != null) {
+    _showBackgroundNotification(message);
+  }
+}
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+Future<void> _setupNotificationChannel() async {
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'high_priority_channel',
+    'High Priority Notifications',
+    description: 'This channel is used for important notifications.',
+    importance: Importance.high,
+    playSound: true,
+  );
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(channel);
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+}
+
+Future<void> _showBackgroundNotification(RemoteMessage message) async {
+  const AndroidNotificationDetails androidPlatformChannelSpecifics =
+      AndroidNotificationDetails(
+        'high_priority_channel',
+        'High Priority Notifications',
+        channelDescription: 'This channel is used for important notifications.',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+      );
+
+  const NotificationDetails platformChannelSpecifics = NotificationDetails(
+    android: androidPlatformChannelSpecifics,
+  );
+
+  await flutterLocalNotificationsPlugin.show(
+    DateTime.now().millisecondsSinceEpoch ~/ 1000,
+    message.notification?.title ?? "No Title",
+    message.notification?.body ?? "No Body",
+    platformChannelSpecifics,
+  );
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
+  await _setupNotificationChannel();
   runApp(const MyApp());
 }
 
@@ -21,7 +80,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'FCM Background Notification',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -79,10 +138,9 @@ class _HomePageState extends State<HomePage> {
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint("Foreground message received: ${message.notification?.title}");
       if (message.notification != null) {
-        debugPrint(
-          "Foreground message received: ${message.notification!.title}",
-        );
+        _showForegroundNotification(message);
       }
     });
 
@@ -101,16 +159,36 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _showForegroundNotification(RemoteMessage message) async {
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+        const AndroidNotificationDetails(
+          'high_priority_channel',
+          'High Priority Notifications',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+        );
+
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      message.notification!.title,
+      message.notification!.body,
+      platformChannelSpecifics,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text("FCM Demo")),
-        body: Center(
-          child: SelectableText(
-            _token != null ? "FCM Token: $_token" : "Fetching token...",
-            textAlign: TextAlign.center,
-          ),
+    return Scaffold(
+      appBar: AppBar(title: const Text("FCM Background Notification")),
+      body: Center(
+        child: SelectableText(
+          _token != null ? "FCM Token: $_token" : "Fetching token...",
+          textAlign: TextAlign.center,
         ),
       ),
     );
