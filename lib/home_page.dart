@@ -1,6 +1,6 @@
-// home_page.dart
-import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
+
 import 'notification_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,17 +29,21 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      debugPrint("User granted permission");
+      debugPrint("✅ User granted permission for notifications.");
     } else {
-      debugPrint("User declined or has not accepted permission");
+      debugPrint("❌ User declined or has not accepted notifications.");
     }
 
+    _setupFCMListeners(messaging);
+  }
+
+  void _setupFCMListeners(FirebaseMessaging messaging) {
     messaging.getToken().then((token) {
       if (token != null) {
         setState(() {
           _token = token;
         });
-        debugPrint("FCM Token: $_token");
+        debugPrint("🔹 FCM Token: $_token");
       }
     });
 
@@ -47,11 +51,15 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _token = newToken;
       });
-      debugPrint("FCM Token Refreshed: $_token");
+      debugPrint("🔄 FCM Token Refreshed: $_token");
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint("Foreground message received: ${message.notification?.title}");
+      debugPrint(
+        "📩 Foreground message received: ${message.notification?.title}",
+      );
+      debugPrint("📨 Foreground message data: ${message.data}");
+
       if (message.notification != null) {
         NotificationService.showNotification(message);
       }
@@ -59,27 +67,32 @@ class _HomePageState extends State<HomePage> {
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       if (message.notification != null) {
-        debugPrint("Message clicked: ${message.notification!.title}");
+        debugPrint("🟢 Message clicked: ${message.notification!.title}");
       }
     });
 
-    RemoteMessage? initialMessage =
-        await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) {
-      debugPrint(
-        "App opened from terminated state: ${initialMessage.notification?.title}",
-      );
-    }
+    FirebaseMessaging.instance.getInitialMessage().then((initialMessage) {
+      if (initialMessage != null) {
+        debugPrint(
+          "🚀 App opened from terminated state: ${initialMessage.notification?.title}",
+        );
+      }
+    });
+
+    messaging.subscribeToTopic("topic");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("FCM Background Notification")),
-      body: Center(
-        child: SelectableText(
-          _token != null ? "FCM Token: $_token" : "Fetching token...",
-          textAlign: TextAlign.center,
+      appBar: AppBar(title: const Text("FCM Notification")),
+      body: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Center(
+          child: SelectableText(
+            _token != null ? "FCM Token: $_token" : "Fetching token...",
+            textAlign: TextAlign.center,
+          ),
         ),
       ),
     );
