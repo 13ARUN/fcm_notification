@@ -9,7 +9,9 @@ import 'home_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseMessaging.onBackgroundMessage(NotificationService.backgroundMessageHandler);
+  FirebaseMessaging.onBackgroundMessage(
+    NotificationService.backgroundMessageHandler,
+  );
   await NotificationService.setupNotificationChannel();
   runApp(const MyApp());
 }
