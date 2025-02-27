@@ -1,7 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-import 'notification_service.dart';
+import '../services/notification_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -66,16 +69,22 @@ class _HomePageState extends State<HomePage> {
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        debugPrint("🟢 Message clicked: ${message.notification!.title}");
+      if (message.data.containsKey('route')) {
+        final route = message.data['route'];
+        debugPrint("🟢 Navigating to: $route");
+        if (route != null) {
+          GoRouter.of(context).go(route);
+        }
       }
     });
 
     FirebaseMessaging.instance.getInitialMessage().then((initialMessage) {
-      if (initialMessage != null) {
-        debugPrint(
-          "🚀 App opened from terminated state: ${initialMessage.notification?.title}",
-        );
+      if (initialMessage != null && initialMessage.data.containsKey('route')) {
+        final route = initialMessage.data['route'];
+        debugPrint("🚀 Navigating to initial route: $route");
+        if (route != null) {
+          GoRouter.of(context).go(route);
+        }
       }
     });
 
@@ -89,9 +98,25 @@ class _HomePageState extends State<HomePage> {
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Center(
-          child: SelectableText(
-            _token != null ? "FCM Token: $_token" : "Fetching token...",
-            textAlign: TextAlign.center,
+          child: Column(
+            children: [
+              SelectableText(
+                _token != null ? "FCM Token: $_token" : "Fetching token...",
+                textAlign: TextAlign.center,
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.push('/details/42');
+                },
+                child: Text('Push to Details'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  context.push('/products');
+                },
+                child: Text('Push to Products'),
+              ),
+            ],
           ),
         ),
       ),
