@@ -1,9 +1,6 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
 import '../services/notification_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -42,18 +39,20 @@ class _HomePageState extends State<HomePage> {
 
   void _setupFCMListeners(FirebaseMessaging messaging) {
     messaging.getToken().then((token) {
-      if (token != null) {
+      if (mounted) {
         setState(() {
-          _token = token;
+          _token = token ?? "No token received";
         });
-        debugPrint("🔹 FCM Token: $_token");
       }
+      debugPrint("🔹 FCM Token: $_token");
     });
 
     messaging.onTokenRefresh.listen((newToken) {
-      setState(() {
-        _token = newToken;
-      });
+      if (mounted) {
+        setState(() {
+          _token = newToken;
+        });
+      }
       debugPrint("🔄 FCM Token Refreshed: $_token");
     });
 
@@ -72,7 +71,8 @@ class _HomePageState extends State<HomePage> {
       if (message.data.containsKey('route')) {
         final route = message.data['route'];
         debugPrint("🟢 Navigating to: $route");
-        if (route != null) {
+
+        if (mounted && route != null) {
           GoRouter.of(context).go(route);
         }
       }
@@ -82,7 +82,8 @@ class _HomePageState extends State<HomePage> {
       if (initialMessage != null && initialMessage.data.containsKey('route')) {
         final route = initialMessage.data['route'];
         debugPrint("🚀 Navigating to initial route: $route");
-        if (route != null) {
+
+        if (mounted && route != null) {
           GoRouter.of(context).go(route);
         }
       }
@@ -106,13 +107,17 @@ class _HomePageState extends State<HomePage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  context.push('/details/42');
+                  if (mounted) {
+                    context.push('/details/42');
+                  }
                 },
                 child: Text('Push to Details'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  context.push('/products');
+                  if (mounted) {
+                    context.push('/products');
+                  }
                 },
                 child: Text('Push to Products'),
               ),

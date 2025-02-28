@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -7,12 +6,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 class NotificationService {
   @pragma('vm:entry-point')
   NotificationService();
+
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   @pragma('vm:entry-point')
   static Future<void> backgroundMessageHandler(RemoteMessage message) async {
-    await Firebase.initializeApp();
     debugPrint("Handling background message: ${message.notification?.title}");
     debugPrint("Handling background data message: ${message.data}");
   }
@@ -35,7 +34,7 @@ class NotificationService {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initializationSettings =
+    final InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
     await _notificationsPlugin.initialize(initializationSettings);
@@ -60,7 +59,7 @@ class NotificationService {
     );
 
     await _notificationsPlugin.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      DateTime.now().millisecondsSinceEpoch,
       message.notification?.title ?? "No Title",
       message.notification?.body ?? "No Body",
       notificationDetails,
