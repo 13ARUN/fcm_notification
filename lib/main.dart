@@ -2,11 +2,12 @@
 import 'package:fcm_notification/firebase_options.dart';
 import 'package:fcm_notification/pages/details_page.dart';
 import 'package:fcm_notification/pages/products_page.dart';
+import 'package:fcm_notification/pages/send_notification_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'services/notification_service.dart';
+import 'services/local_notification_service.dart';
 import 'pages/home_page.dart';
 
 final GoRouter router = GoRouter(
@@ -31,6 +32,12 @@ final GoRouter router = GoRouter(
         return ProductsPage();
       },
     ),
+    GoRoute(
+      path: '/send',
+      builder: (context, state) {
+        return SendNotificationPage();
+      },
+    ),
   ],
 );
 
@@ -38,9 +45,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(
-    NotificationService.backgroundMessageHandler,
+    LocalNotificationService.backgroundMessageHandler,
   );
-  await NotificationService.setupNotificationChannel();
+  await LocalNotificationService.setupNotificationChannel();
   runApp(const MyApp());
 }
 

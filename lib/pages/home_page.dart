@@ -1,7 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../services/notification_service.dart';
+import '../services/local_notification_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
       debugPrint("📨 Foreground message data: ${message.data}");
 
       if (message.notification != null) {
-        NotificationService.showNotification(message);
+        LocalNotificationService.showNotification(message);
       }
     });
 
@@ -96,6 +96,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("FCM Notification")),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          if (mounted) {
+            context.push('/send');
+          }
+        },
+        child: Icon(Icons.send),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Center(

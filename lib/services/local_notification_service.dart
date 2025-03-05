@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 @pragma('vm:entry-point')
-class NotificationService {
+class LocalNotificationService {
   @pragma('vm:entry-point')
-  NotificationService();
+  LocalNotificationService();
 
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -59,7 +59,7 @@ class NotificationService {
     );
 
     await _notificationsPlugin.show(
-      DateTime.now().millisecondsSinceEpoch,
+      DateTime.now().millisecondsSinceEpoch % 2147483647,
       message.notification?.title ?? "No Title",
       message.notification?.body ?? "No Body",
       notificationDetails,
