@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart' as gauth;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,6 +40,9 @@ class AuthService {
     ]);
 
     final newToken = client.credentials.accessToken.data;
+    final expiry = client.credentials.accessToken.expiry;
+    debugPrint("Generated token: $newToken");
+    debugPrint("Expiry time: $expiry");
     client.close();
 
     await _storeAccessToken(newToken);

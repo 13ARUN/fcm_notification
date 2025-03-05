@@ -18,7 +18,7 @@ class FCMNotificationService {
           "message": {
             "topic": "topic",
             "notification": {"title": title, "body": body},
-            "data": {"click_action": "FLUTTER_NOTIFICATION_CLICK"},
+            "data": {"route": "/send"},
             "android": {
               "priority": "high",
               "notification": {
